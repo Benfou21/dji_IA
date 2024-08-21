@@ -1,8 +1,13 @@
 import subprocess
 import cv2
+from ultralytics import YOLO
+
+
+model = YOLO("yolov9c.pt")
+
 
 # Remplace VIDEO_ID par l'ID de la vidéo YouTube en direct
-video_url = "https://www.youtube.com/live/DeXhxJOt4gY"
+video_url = "https://www.youtube.com/watch?v=ZIOcuNXfN5o"
 command = ["yt-dlp", "-g", video_url]
 
 # Exécuter la commande et capturer l'URL du flux
@@ -23,6 +28,19 @@ try:
 
         # Afficher la frame
         cv2.imshow('Live Stream', frame)
+        results = model(frame)
+        
+        for result in results:
+            boxes = result.boxes  # Boîtes de délimitation
+            for box in boxes:
+                x1, y1, x2, y2 = box.xyxy[0]  # Coordonnées des coins
+                conf = box.conf[0]  # Confiance
+                cls = box.cls[0]  # Classe de l'objet détecté
+
+                # Afficher les rectangles de détection et les étiquettes
+                label = f"{model.names[int(cls)]}: {conf:.2f}"
+                cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                cv2.putText(frame, label, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
         # Quitter avec la touche 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
